@@ -721,3 +721,114 @@ Update README.md when:
 ---
 
 *Last Updated: 2026-05-01*
+
+---
+
+## 🔧 Remaining Tasks
+
+### Critical Security & Functionality Issues
+
+#### High Priority
+
+1. **Command Injection Vulnerability** (Security - High)
+   - **Location**: `src/backend/services/ollama-wrapper.ts:137-158`
+   - **Issue**: User input concatenated directly into shell commands without sanitization
+   - **Action**: Implement input validation with whitelist (alphanumeric, hyphens, underscores only)
+   - **Status**: ⚠️ Needs immediate attention
+
+2. **Audio Stream Timeout Handling** (Functionality - High)
+   - **Location**: `src/backend/services/tts-service.ts:290-306`
+   - **Issue**: `streamToBuffer` lacks timeout, can hang indefinitely
+   - **Action**: Add Promise.race with timeout mechanism
+   - **Status**: ⚠️ Needs immediate attention
+
+#### Medium Priority
+
+3. **API Key Exposure in Logs** (Security - Medium)
+   - **Location**: `src/backend/services/watsonx-service.ts:288-290`
+   - **Issue**: Error messages may expose API keys in logs
+   - **Action**: Sanitize error messages, use generic messages for config errors
+   - **Status**: 🔶 Should be addressed
+
+4. **Sensitive Data Logging** (Security - Medium)
+   - **Location**: `src/backend/services/command-parser.ts:238`
+   - **Issue**: Full command text logged, may contain sensitive user data
+   - **Action**: Implement log sanitization, log only intent/function names in production
+   - **Status**: 🔶 Should be addressed
+
+5. **Audio Buffer Size Validation** (Functionality - Medium)
+   - **Location**: `src/backend/services/whisper-service.ts:132-176`
+   - **Issue**: No validation for buffer size before processing
+   - **Action**: Add size validation against MAX_FILE_SIZE environment variable
+   - **Status**: 🔶 Should be addressed
+
+6. **Response Parsing Null Checks** (Functionality - Medium)
+   - **Location**: `src/backend/services/watsonx-service.ts:301-322`
+   - **Issue**: Nested property access without null checks
+   - **Action**: Add optional chaining and fallback values
+   - **Status**: 🔶 Should be addressed
+
+7. **Singleton Race Conditions** (Functionality - Medium)
+   - **Location**: `src/backend/services/watsonx-service.ts:414-427`
+   - **Issue**: Singleton pattern without synchronization
+   - **Action**: Use more robust singleton pattern or dependency injection
+   - **Status**: 🔶 Should be addressed
+
+8. **Generic Error Handling** (Functionality - Medium)
+   - **Location**: `src/backend/routes/voice.routes.ts:63-72`
+   - **Issue**: Error context lost in generic responses
+   - **Action**: Preserve error types, provide specific error codes
+   - **Status**: 🔶 Should be addressed
+
+9. **Temp File Memory Leak** (Performance - Medium)
+   - **Location**: `src/backend/services/whisper-service.ts:213-240`
+   - **Issue**: Temp files may accumulate if process crashes
+   - **Action**: Implement startup cleanup routine for old temp files
+   - **Status**: 🔶 Should be addressed
+
+#### Low Priority
+
+10. **Base64 Encoding Overhead** (Performance - Low)
+    - **Location**: `src/backend/routes/voice.routes.ts:36`
+    - **Issue**: Double base64 conversion inefficient for large files
+    - **Action**: Consider multipart/form-data or streaming
+    - **Status**: 🔵 Nice to have
+
+11. **Magic Numbers in Configuration** (Maintainability - Low)
+    - **Location**: `src/backend/services/ollama-wrapper.ts:118-126`
+    - **Issue**: Hardcoded retry values (3 retries, 1000ms delay)
+    - **Action**: Extract to constants or environment variables
+    - **Status**: 🔵 Nice to have
+
+12. **Hardcoded Model ID** (Maintainability - Low)
+    - **Location**: `src/backend/services/watsonx-service.ts:267`
+    - **Issue**: Model ID 'meta-llama/llama-3-70b-instruct' hardcoded
+    - **Action**: Extract to constant or environment variable
+    - **Status**: 🔵 Nice to have
+
+13. **Duplicate Error Handling** (Maintainability - Low)
+    - **Location**: `src/backend/routes/voice.routes.ts:21-328`
+    - **Issue**: Repeated try-catch pattern across routes
+    - **Action**: Create error handling middleware
+    - **Status**: 🔵 Nice to have
+
+14. **Empty Text Validation** (Functionality - Low)
+    - **Location**: `src/backend/routes/voice.routes.ts:79-91`
+    - **Issue**: No validation for empty/whitespace-only text
+    - **Action**: Add trim() validation, reject empty requests
+    - **Status**: 🔵 Nice to have
+
+### Task Priority Legend
+
+- ⚠️ **High Priority**: Security vulnerabilities or critical functionality issues
+- 🔶 **Medium Priority**: Important improvements for stability and security
+- 🔵 **Low Priority**: Code quality and maintainability improvements
+
+### Recommended Action Plan
+
+1. **Sprint 1** (Week 1): Address all High Priority issues (#1-2)
+2. **Sprint 2** (Week 2): Address Medium Priority security issues (#3-4)
+3. **Sprint 3** (Week 3): Address remaining Medium Priority issues (#5-9)
+4. **Sprint 4** (Week 4): Address Low Priority improvements (#10-14)
+
+---
