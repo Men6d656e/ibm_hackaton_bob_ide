@@ -19,6 +19,7 @@ dotenv.config();
 // Import routes
 import ollamaRoutes from './routes/ollama.routes';
 import sessionRoutes from './routes/session.routes';
+import voiceRoutes from './routes/voice.routes';
 
 /**
  * Application configuration constants
@@ -79,6 +80,7 @@ app.get('/health', (_req: Request, res: Response) => {
  */
 app.use('/api/ollama', ollamaRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/voice', voiceRoutes);
 
 /**
  * Root endpoint
