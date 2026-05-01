@@ -10,26 +10,22 @@
 import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
+import { initializeDatabase, closeDatabase } from './database/connection';
+import logger from './utils/logger';
 
 // Load environment variables
 dotenv.config();
 
-// Import routes (will be created in Phase 3)
-// import ollamaRoutes from './routes/ollama.routes';
-// import sessionRoutes from './routes/session.routes';
-// import voiceRoutes from './routes/voice.routes';
-// import analyticsRoutes from './routes/analytics.routes';
-
-// Import middleware (will be created)
-// import { errorHandler } from './middleware/error-handler';
-// import { requestLogger } from './middleware/logger';
+// Import routes
+import ollamaRoutes from './routes/ollama.routes';
+import sessionRoutes from './routes/session.routes';
 
 /**
  * Application configuration constants
  */
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const SHUTDOWN_TIMEOUT_MS = 10000; // 10 seconds
 
 /**
  * Initialize Express application
@@ -54,13 +50,11 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging middleware (development only)
-if (NODE_ENV === 'development') {
-  app.use((req: Request, _res: Response, next: NextFunction) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-    next();
-  });
-}
+// Request logging middleware
+app.use((req: Request, _res: Response, next: NextFunction) => {
+  logger.http(`${req.method} ${req.path}`);
+  next();
+});
 
 /**
  * Health Check Endpoint
@@ -80,13 +74,11 @@ app.get('/health', (_req: Request, res: Response) => {
 
 /**
  * API Routes
- * 
+ *
  * All API routes are prefixed with /api
  */
-// app.use('/api/ollama', ollamaRoutes);
-// app.use('/api/sessions', sessionRoutes);
-// app.use('/api/voice', voiceRoutes);
-// app.use('/api/analytics', analyticsRoutes);
+app.use('/api/ollama', ollamaRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 /**
  * Root endpoint
@@ -119,7 +111,7 @@ app.use((_req: Request, res: Response) => {
  * Catches all errors and returns a consistent error response
  */
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-  console.error('Server Error:', err);
+  logger.error('Server Error:', { error: err.message, stack: err.stack });
 
   res.status(500).json({
     success: false,
@@ -132,34 +124,78 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 });
 
 /**
- * Start the server
- * 
- * @returns {void}
+ * Server instance
  */
-const startServer = (): void => {
+let server: ReturnType<typeof app.listen> | null = null;
+
+/**
+ * Start the server
+ *
+ * @returns {Promise<void>}
+ */
+const startServer = async (): Promise<void> => {
   try {
-    app.listen(PORT, () => {
-      console.log('='.repeat(50));
-      console.log('🚀 Ollama Voice Orchestrator API Server');
-      console.log('='.repeat(50));
-      console.log(`📡 Server running on: http://localhost:${PORT}`);
-      console.log(`🌍 Environment: ${NODE_ENV}`);
-      console.log(`⏰ Started at: ${new Date().toISOString()}`);
-      console.log('='.repeat(50));
-      console.log('\n✅ Server is ready to accept requests\n');
+    // Initialize database
+    logger.info('🔧 Initializing database...');
+    await initializeDatabase();
+    logger.info('✅ Database initialized successfully');
+
+    server = app.listen(PORT, () => {
+      logger.info('='.repeat(50));
+      logger.info('🚀 Ollama Voice Orchestrator API Server');
+      logger.info('='.repeat(50));
+      logger.info(`📡 Server running on: http://localhost:${PORT}`);
+      logger.info(`🌍 Environment: ${NODE_ENV}`);
+      logger.info(`⏰ Started at: ${new Date().toISOString()}`);
+      logger.info('='.repeat(50));
+      logger.info('\n✅ Server is ready to accept requests\n');
+    });
+
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        logger.error(`❌ Port ${PORT} is already in use`);
+      } else {
+        logger.error('❌ Server error:', error);
+      }
+      process.exit(1);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    logger.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 };
 
 /**
  * Graceful shutdown handler
+ *
+ * @returns {Promise<void>}
  */
-const gracefulShutdown = (): void => {
-  console.log('\n🛑 Received shutdown signal, closing server gracefully...');
-  process.exit(0);
+const gracefulShutdown = async (): Promise<void> => {
+  logger.info('\n🛑 Received shutdown signal, closing server gracefully...');
+
+  if (server) {
+    server.close(async () => {
+      logger.info('✅ Server closed successfully');
+      
+      // Close database connection
+      try {
+        await closeDatabase();
+        logger.info('✅ Database connection closed');
+      } catch (error) {
+        logger.error('Error closing database:', error);
+      }
+      
+      process.exit(0);
+    });
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+      logger.error('⚠️ Forced shutdown after timeout');
+      process.exit(1);
+    }, SHUTDOWN_TIMEOUT_MS);
+  } else {
+    process.exit(0);
+  }
 };
 
 // Handle shutdown signals
