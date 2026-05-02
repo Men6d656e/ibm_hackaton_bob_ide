@@ -1,0 +1,181 @@
+/**
+ * Context Monitor Styles
+ */
+
+.context-monitor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  font-size: 13px;
+  transition: all 0.3s ease;
+}
+
+.context-monitor__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.context-monitor__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 60px;
+}
+
+.context-monitor__label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.context-monitor__value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.context-monitor__bar {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 100px;
+  max-width: 200px;
+}
+
+.context-monitor__fill {
+  height: 100%;
+  transition: width 0.3s ease, background-color 0.3s ease;
+  border-radius: 4px;
+}
+
+.context-monitor__fill--normal {
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.context-monitor__fill--caution {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.context-monitor__fill--warning {
+  background: linear-gradient(90deg, #f97316, #fb923c);
+}
+
+.context-monitor__fill--critical {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+  animation: pulse-critical 2s ease-in-out infinite;
+}
+
+.context-monitor__details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.context-monitor__stat {
+  white-space: nowrap;
+}
+
+.context-monitor__separator {
+  color: var(--text-tertiary);
+}
+
+.context-monitor__warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  margin-left: 12px;
+  animation: slide-in 0.3s ease-out;
+}
+
+.context-monitor__warning-icon {
+  font-size: 14px;
+  animation: pulse-warning 1.5s ease-in-out infinite;
+}
+
+.context-monitor__warning-text {
+  font-size: 12px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* Status-specific styles */
+.context-monitor--normal {
+  border-left: 3px solid #10b981;
+}
+
+.context-monitor--caution {
+  border-left: 3px solid #f59e0b;
+}
+
+.context-monitor--warning {
+  border-left: 3px solid #f97316;
+}
+
+.context-monitor--critical {
+  border-left: 3px solid #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* Animations */
+@keyframes pulse-critical {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulse-warning {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .context-monitor {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .context-monitor__details {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .context-monitor__warning {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 8px;
+  }
+}
+
+/* Made with Bob */
