@@ -281,26 +281,56 @@ export class TTSService {
   }
 
   /**
-   * Convert readable stream to buffer
-   * 
-   * @param {NodeJS.ReadableStream} stream - Input stream
+   * Convert readable stream to buffer with timeout
+   *
+   * @param {any} stream - Input stream
+   * @param {number} [timeoutMs=30000] - Timeout in milliseconds (default: 30 seconds)
    * @returns {Promise<Buffer>} Buffer containing stream data
+   * @throws {Error} If stream times out or encounters an error
    * @private
    */
-  private streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
+  private streamToBuffer(stream: any, timeoutMs: number = 30000): Promise<Buffer> {
     return new Promise((resolve, reject) => {
       const chunks: Buffer[] = [];
+      let timeoutId: NodeJS.Timeout;
+      let isResolved = false;
+
+      // Set up timeout
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          isResolved = true;
+          if (stream.destroy && typeof stream.destroy === 'function') {
+            stream.destroy();
+          }
+          reject(new Error(`Stream timeout after ${timeoutMs}ms`));
+        }
+      }, timeoutMs);
+
+      // Clean up timeout
+      const cleanup = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      };
       
       stream.on('data', (chunk: Buffer) => {
         chunks.push(chunk);
       });
       
       stream.on('end', () => {
-        resolve(Buffer.concat(chunks));
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          resolve(Buffer.concat(chunks));
+        }
       });
       
       stream.on('error', (error: Error) => {
-        reject(error);
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject(error);
+        }
       });
     });
   }

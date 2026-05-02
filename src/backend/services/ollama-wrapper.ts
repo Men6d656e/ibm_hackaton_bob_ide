@@ -126,8 +126,34 @@ export class OllamaWrapper {
   }
 
   /**
+   * Sanitizes model name to prevent command injection
+   *
+   * @private
+   * @param {string} name - Model name to sanitize
+   * @returns {string} Sanitized model name
+   * @throws {OllamaError} If model name contains invalid characters
+   */
+  private sanitizeModelName(name: string): string {
+    // Only allow alphanumeric characters, hyphens, underscores, colons (for tags), and dots
+    if (!/^[a-zA-Z0-9_\-:.]+$/.test(name)) {
+      throw new OllamaError(
+        `Invalid model name: "${name}". Only alphanumeric characters, hyphens, underscores, colons, and dots are allowed.`
+      );
+    }
+    
+    // Prevent path traversal
+    if (name.includes('..') || name.includes('/') || name.includes('\\')) {
+      throw new OllamaError(
+        `Invalid model name: "${name}". Path traversal characters are not allowed.`
+      );
+    }
+    
+    return name;
+  }
+
+  /**
    * Executes an Ollama CLI command with retry logic
-   * 
+   *
    * @private
    * @param {string} command - Command to execute
    * @param {number} [attempt=1] - Current attempt number
@@ -237,7 +263,8 @@ export class OllamaWrapper {
    * ```
    */
   async showModel(modelName: string): Promise<IOllamaModel> {
-    const output = await this.executeCommand(`${this.ollamaCommand} show ${modelName}`);
+    const sanitizedName = this.sanitizeModelName(modelName);
+    const output = await this.executeCommand(`${this.ollamaCommand} show ${sanitizedName}`);
     
     // Parse model information from output
     const model: IOllamaModel = {
@@ -281,7 +308,8 @@ export class OllamaWrapper {
    * ```
    */
   async runModel(modelName: string, options?: IModelRunOptions): Promise<void> {
-    let command = `${this.ollamaCommand} run ${modelName}`;
+    const sanitizedName = this.sanitizeModelName(modelName);
+    let command = `${this.ollamaCommand} run ${sanitizedName}`;
     
     if (options) {
       // Add options to command if provided
@@ -309,7 +337,8 @@ export class OllamaWrapper {
    * ```
    */
   async stopModel(modelName: string): Promise<void> {
-    await this.executeCommand(`${this.ollamaCommand} stop ${modelName}`);
+    const sanitizedName = this.sanitizeModelName(modelName);
+    await this.executeCommand(`${this.ollamaCommand} stop ${sanitizedName}`);
   }
 
   /**
@@ -327,7 +356,9 @@ export class OllamaWrapper {
    * ```
    */
   async pullModel(modelName: string, tag: string = 'latest'): Promise<void> {
-    const fullName = tag === 'latest' ? modelName : `${modelName}:${tag}`;
+    const sanitizedName = this.sanitizeModelName(modelName);
+    const sanitizedTag = this.sanitizeModelName(tag);
+    const fullName = tag === 'latest' ? sanitizedName : `${sanitizedName}:${sanitizedTag}`;
     await this.executeCommand(`${this.ollamaCommand} pull ${fullName}`);
   }
 
@@ -345,7 +376,8 @@ export class OllamaWrapper {
    * ```
    */
   async removeModel(modelName: string): Promise<void> {
-    await this.executeCommand(`${this.ollamaCommand} rm ${modelName}`);
+    const sanitizedName = this.sanitizeModelName(modelName);
+    await this.executeCommand(`${this.ollamaCommand} rm ${sanitizedName}`);
   }
 
   /**
@@ -393,7 +425,9 @@ export class OllamaWrapper {
    * ```
    */
   async copyModel(source: string, destination: string): Promise<void> {
-    await this.executeCommand(`${this.ollamaCommand} cp ${source} ${destination}`);
+    const sanitizedSource = this.sanitizeModelName(source);
+    const sanitizedDest = this.sanitizeModelName(destination);
+    await this.executeCommand(`${this.ollamaCommand} cp ${sanitizedSource} ${sanitizedDest}`);
   }
 
   /**
