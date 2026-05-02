@@ -1,13 +1,15 @@
 /**
  * Chat Message Component
- * 
+ *
  * Displays individual chat messages with role-based styling.
- * 
+ * Optimized with React.memo to prevent unnecessary re-renders.
+ *
  * @module renderer/components/ChatPanel/ChatMessage
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import type { ChatMessage as ChatMessageType } from '../../store/chat.store';
+import { shallowEqual } from '../../utils/performance';
 import './ChatMessage.css';
 
 /**
@@ -29,12 +31,12 @@ const formatTime = (date: Date): string => {
 };
 
 /**
- * Chat message component
- * 
+ * Chat message component (memoized for performance)
+ *
  * @param {ChatMessageProps} props - Component props
  * @returns {JSX.Element} The chat message component
  */
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+const ChatMessageComponent: React.FC<ChatMessageProps> = ({ message }) => {
   const { role, content, timestamp, isVoice, processingTime, error } = message;
 
   return (
@@ -81,5 +83,16 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     </div>
   );
 };
+
+/**
+ * Memoized chat message component
+ * Only re-renders when message content actually changes
+ */
+export const ChatMessage = memo(ChatMessageComponent, (prevProps, nextProps) => {
+  // Custom comparison function for better performance
+  return shallowEqual(prevProps.message, nextProps.message);
+});
+
+ChatMessage.displayName = 'ChatMessage';
 
 // Made with Bob
