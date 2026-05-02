@@ -156,7 +156,9 @@ export class CommandParser {
     const startTime = Date.now();
 
     try {
-      logger.info('Processing text command', { text });
+      // Limit text length in logs to avoid logging sensitive data
+      const sanitizedText = text.length > 100 ? text.substring(0, 100) + '...' : text;
+      logger.info('Processing text command', { text: sanitizedText });
 
       const commandResult = await this.parseCommand(text, conversationHistory);
       const executionResult = await this.executeCommand(
@@ -252,7 +254,12 @@ export class CommandParser {
     parameters: Record<string, any>
   ): Promise<any> {
     try {
-      logger.info('Executing Ollama command', { function: functionName, parameters });
+      // Sanitize parameters for logging (avoid logging sensitive data)
+      const sanitizedParams = { ...parameters };
+      if (sanitizedParams.prompt && sanitizedParams.prompt.length > 100) {
+        sanitizedParams.prompt = sanitizedParams.prompt.substring(0, 100) + '...';
+      }
+      logger.info('Executing Ollama command', { function: functionName, parameters: sanitizedParams });
 
       switch (functionName) {
         case 'list_models':

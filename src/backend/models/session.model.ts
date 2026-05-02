@@ -294,7 +294,7 @@ export class SessionModel {
     }
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_messages,
         COALESCE(SUM(token_count), 0) as total_tokens
       FROM messages

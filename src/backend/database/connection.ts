@@ -40,12 +40,16 @@ export async function initializeDatabase(): Promise<sqlite3.Database> {
     }
 
     // Create database connection
-    db = new sqlite3.Database(DB_PATH, (err) => {
-      if (err) {
-        logger.error('Failed to connect to database', { error: err });
-        throw err;
-      }
-      logger.info('Connected to SQLite database', { path: DB_PATH });
+    db = await new Promise<sqlite3.Database>((resolve, reject) => {
+      const database = new sqlite3.Database(DB_PATH, (err) => {
+        if (err) {
+          logger.error('Failed to connect to database', { error: err });
+          reject(err);
+        } else {
+          logger.info('Connected to SQLite database', { path: DB_PATH });
+          resolve(database);
+        }
+      });
     });
 
     // Enable foreign keys
@@ -204,7 +208,7 @@ export async function beginTransaction(database: sqlite3.Database): Promise<void
 
 /**
  * Commit a transaction
- * 
+ *
  * @param {sqlite3.Database} database - Database instance
  * @returns {Promise<void>}
  */
@@ -214,7 +218,7 @@ export async function commitTransaction(database: sqlite3.Database): Promise<voi
 
 /**
  * Rollback a transaction
- * 
+ *
  * @param {sqlite3.Database} database - Database instance
  * @returns {Promise<void>}
  */

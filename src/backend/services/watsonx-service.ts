@@ -285,8 +285,13 @@ Available operations:
 
       return result;
     } catch (error) {
-      logger.error('Failed to process command', { error, command: userCommand });
-      throw new Error(`Command processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Sanitize error to avoid exposing API keys or sensitive data
+      const sanitizedError = error instanceof Error ? error.message.replace(/apikey[=:]\s*[\w-]+/gi, 'apikey=***') : 'Unknown error';
+      logger.error('Failed to process command', {
+        error: sanitizedError,
+        command: userCommand.substring(0, 100) // Limit command length in logs
+      });
+      throw new Error(`Command processing failed: ${sanitizedError}`);
     }
   }
 
@@ -417,7 +422,7 @@ export function getWatsonxService(): WatsonxService {
     const projectId = process.env.WATSONX_PROJECT_ID;
 
     if (!apiKey || !projectId) {
-      throw new Error('WATSONX_API_KEY and WATSONX_PROJECT_ID must be set in environment variables');
+      throw new Error('Required Watson AI configuration is missing. Please check environment variables.');
     }
 
     watsonxInstance = new WatsonxService(apiKey, projectId);
