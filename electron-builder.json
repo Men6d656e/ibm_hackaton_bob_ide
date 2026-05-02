@@ -1,0 +1,135 @@
+{
+  "appId": "com.ovo.ollama-voice-orchestrator",
+  "productName": "Ollama Voice Orchestrator",
+  "copyright": "Copyright © 2026 OVO Team",
+  "directories": {
+    "output": "dist/packages",
+    "buildResources": "assets"
+  },
+  "files": [
+    "dist/**/*",
+    "package.json",
+    "!**/*.map",
+    "!**/node_modules/**/{CHANGELOG.md,README.md,README,readme.md,readme}",
+    "!**/node_modules/**/{test,__tests__,tests,powered-test,example,examples}",
+    "!**/node_modules/**/*.d.ts",
+    "!**/node_modules/.bin",
+    "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+    "!.editorconfig",
+    "!**/._*",
+    "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+    "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+    "!**/{appveyor.yml,.travis.yml,circle.yml}",
+    "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+  ],
+  "extraResources": [
+    {
+      "from": "database",
+      "to": "database",
+      "filter": ["**/*"]
+    },
+    {
+      "from": "scripts",
+      "to": "scripts",
+      "filter": ["**/*.sh"]
+    }
+  ],
+  "linux": {
+    "target": [
+      {
+        "target": "AppImage",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "deb",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "rpm",
+        "arch": ["x64", "arm64"]
+      },
+      {
+        "target": "tar.gz",
+        "arch": ["x64", "arm64"]
+      }
+    ],
+    "category": "Utility",
+    "icon": "assets/icons",
+    "desktop": {
+      "Name": "Ollama Voice Orchestrator",
+      "Comment": "Voice-controlled desktop application for managing Ollama language models",
+      "GenericName": "AI Voice Assistant",
+      "Keywords": "ollama;voice;ai;assistant;llm",
+      "Categories": "Utility;Development;",
+      "StartupNotify": "true",
+      "Terminal": "false"
+    },
+    "executableName": "ollama-voice-orchestrator",
+    "synopsis": "Voice-controlled Ollama model manager",
+    "description": "A powerful desktop application that provides voice control for Ollama language models. Features include wake word detection, natural language commands, session management, and real-time analytics.",
+    "maintainer": "OVO Team <ovo@example.com>",
+    "vendor": "OVO Team"
+  },
+  "deb": {
+    "depends": [
+      "gconf2",
+      "gconf-service",
+      "libnotify4",
+      "libappindicator1",
+      "libxtst6",
+      "libnss3",
+      "libxss1",
+      "libasound2"
+    ],
+    "priority": "optional",
+    "afterInstall": "build/linux/after-install.sh",
+    "afterRemove": "build/linux/after-remove.sh"
+  },
+  "rpm": {
+    "depends": [
+      "libXScrnSaver",
+      "libnotify",
+      "libappindicator",
+      "libXtst",
+      "nss",
+      "alsa-lib"
+    ],
+    "fpm": [
+      "--rpm-rpmbuild-define=_build_id_links none"
+    ]
+  },
+  "appImage": {
+    "license": "MIT",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "synopsis": "Voice-controlled Ollama model manager",
+    "category": "Utility"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "Men6d656e",
+    "repo": "ibm_hackaton_bob_ide",
+    "releaseType": "release"
+  },
+  "buildVersion": "1.0.0",
+  "compression": "maximum",
+  "asar": true,
+  "asarUnpack": [
+    "**/*.node",
+    "**/node_modules/sharp/**/*"
+  ],
+  "protocols": [
+    {
+      "name": "ollama-voice-orchestrator",
+      "schemes": ["ovo"]
+    }
+  ],
+  "fileAssociations": [
+    {
+      "ext": "ovo",
+      "name": "OVO Session File",
+      "description": "Ollama Voice Orchestrator Session",
+      "icon": "assets/icons/file-icon.png",
+      "role": "Editor"
+    }
+  ]
+}
