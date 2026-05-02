@@ -1,13 +1,15 @@
 /**
  * Chat State Store
- * 
+ *
  * Manages chat messages, conversation history, and message operations.
- * 
+ * Integrated with backend API for real-time session management.
+ *
  * @module renderer/store/chat.store
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { getApiService, type Session, type Message, type SessionStatistics } from '../services/api-service';
 
 /**
  * Message role type
@@ -52,6 +54,18 @@ interface ChatState {
   
   /** Current input text */
   inputText: string;
+  
+  /** Current active session */
+  currentSession: Session | null;
+  
+  /** Session statistics */
+  sessionStats: SessionStatistics | null;
+  
+  /** Context usage percentage */
+  contextUsage: number;
+  
+  /** Whether context is full */
+  isContextFull: boolean;
 }
 
 /**
@@ -72,6 +86,24 @@ interface ChatActions {
   
   /** Set loading state */
   setLoading: (isLoading: boolean) => void;
+  
+  /** Create new session */
+  createSession: (title: string, modelName: string) => Promise<void>;
+  
+  /** Load session */
+  loadSession: (sessionId: string) => Promise<void>;
+  
+  /** Load messages from backend */
+  loadMessages: (sessionId: string) => Promise<void>;
+  
+  /** Update session statistics */
+  updateStatistics: () => Promise<void>;
+  
+  /** Check context status */
+  checkContextStatus: () => Promise<void>;
+  
+  /** Clear current session */
+  clearSession: () => void;
 }
 
 /**
@@ -101,6 +133,10 @@ export const useChatStore = create<ChatStore>()(
       messages: [],
       isLoading: false,
       inputText: '',
+      currentSession: null,
+      sessionStats: null,
+      contextUsage: 0,
+      isContextFull: false,
 
       // Actions
       addMessage: (message) => {
@@ -116,8 +152,20 @@ export const useChatStore = create<ChatStore>()(
       },
 
       sendMessage: async (content, isVoice = false) => {
-        const { addMessage } = get();
+        const { addMessage, currentSession, updateStatistics, checkContextStatus } = get();
+        const api = getApiService();
         
+        // Check if we have an active session
+        if (!currentSession) {
+          console.error('No active session');
+          addMessage({
+            role: 'assistant',
+            content: 'Please create a session first.',
+            error: 'No active session',
+          });
+          return;
+        }
+
         // Add user message
         addMessage({
           role: 'user',
@@ -131,19 +179,53 @@ export const useChatStore = create<ChatStore>()(
         try {
           const startTime = Date.now();
 
-          // TODO: Call backend API to process message
-          // For now, simulate a response
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // Save user message to backend
+          const userMessageResponse = await api.addMessage(currentSession.id, {
+            role: 'user',
+            content,
+            token_count: Math.ceil(content.length / 4), // Rough estimate
+          });
+
+          if (!userMessageResponse.success) {
+            throw new Error(userMessageResponse.error?.message || 'Failed to save message');
+          }
+
+          // Process message with backend (using text command for now)
+          const processResponse = await api.processTextCommand({
+            text: content,
+            conversationHistory: get().messages.map(m => ({
+              role: m.role,
+              content: m.content,
+            })),
+          });
 
           const processingTime = Date.now() - startTime;
 
-          // Add assistant response
-          addMessage({
-            role: 'assistant',
-            content: `I received your message: "${content}". This is a placeholder response. Backend integration coming in Phase 7.`,
-            processingTime,
-          });
+          if (processResponse.success && processResponse.data) {
+            const { response } = processResponse.data;
+
+            // Save assistant response to backend
+            await api.addMessage(currentSession.id, {
+              role: 'assistant',
+              content: response,
+              token_count: Math.ceil(response.length / 4),
+            });
+
+            // Add assistant response to UI
+            addMessage({
+              role: 'assistant',
+              content: response,
+              processingTime,
+            });
+
+            // Update statistics and context status
+            await updateStatistics();
+            await checkContextStatus();
+          } else {
+            throw new Error(processResponse.error?.message || 'Failed to process message');
+          }
         } catch (error) {
+          console.error('Failed to send message:', error);
           // Add error message
           addMessage({
             role: 'assistant',
@@ -165,6 +247,130 @@ export const useChatStore = create<ChatStore>()(
 
       setLoading: (isLoading) => {
         set({ isLoading });
+      },
+
+      createSession: async (title, modelName) => {
+        const api = getApiService();
+        
+        try {
+          const response = await api.createSession({
+            title,
+            model_name: modelName,
+            max_context_length: 4096, // Default context length
+          });
+
+          if (response.success && response.data) {
+            set({
+              currentSession: response.data,
+              messages: [],
+              sessionStats: null,
+              contextUsage: 0,
+              isContextFull: false,
+            });
+          } else {
+            throw new Error(response.error?.message || 'Failed to create session');
+          }
+        } catch (error) {
+          console.error('Failed to create session:', error);
+          throw error;
+        }
+      },
+
+      loadSession: async (sessionId) => {
+        const api = getApiService();
+        
+        try {
+          const sessionResponse = await api.getSession(sessionId);
+          
+          if (sessionResponse.success && sessionResponse.data) {
+            set({ currentSession: sessionResponse.data });
+            
+            // Load messages for this session
+            await get().loadMessages(sessionId);
+            
+            // Update statistics
+            await get().updateStatistics();
+            await get().checkContextStatus();
+          } else {
+            throw new Error(sessionResponse.error?.message || 'Failed to load session');
+          }
+        } catch (error) {
+          console.error('Failed to load session:', error);
+          throw error;
+        }
+      },
+
+      loadMessages: async (sessionId) => {
+        const api = getApiService();
+        
+        try {
+          const response = await api.getMessages(sessionId);
+          
+          if (response.success && response.data) {
+            // Convert backend messages to chat messages
+            const chatMessages: ChatMessage[] = response.data.map((msg: Message) => ({
+              id: msg.id,
+              role: msg.role,
+              content: msg.content,
+              timestamp: new Date(msg.created_at),
+              isVoice: false,
+            }));
+            
+            set({ messages: chatMessages });
+          } else {
+            throw new Error(response.error?.message || 'Failed to load messages');
+          }
+        } catch (error) {
+          console.error('Failed to load messages:', error);
+          throw error;
+        }
+      },
+
+      updateStatistics: async () => {
+        const { currentSession } = get();
+        if (!currentSession) return;
+
+        const api = getApiService();
+        
+        try {
+          const response = await api.getSessionStatistics(currentSession.id);
+          
+          if (response.success && response.data) {
+            set({
+              sessionStats: response.data,
+              contextUsage: response.data.context_usage_percentage,
+            });
+          }
+        } catch (error) {
+          console.error('Failed to update statistics:', error);
+        }
+      },
+
+      checkContextStatus: async () => {
+        const { currentSession } = get();
+        if (!currentSession) return;
+
+        const api = getApiService();
+        
+        try {
+          const response = await api.checkContextStatus(currentSession.id);
+          
+          if (response.success && response.data) {
+            set({ isContextFull: response.data.is_full });
+          }
+        } catch (error) {
+          console.error('Failed to check context status:', error);
+        }
+      },
+
+      clearSession: () => {
+        set({
+          currentSession: null,
+          messages: [],
+          sessionStats: null,
+          contextUsage: 0,
+          isContextFull: false,
+        });
       },
     }),
     { name: 'OVO-ChatStore' }

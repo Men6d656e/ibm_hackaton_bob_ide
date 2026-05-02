@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { useAppStore } from '../../store/app.store';
+import { ContextMonitor } from '../ContextMonitor/ContextMonitor';
 import './StatusBar.css';
 
 /**
@@ -35,25 +36,9 @@ export const StatusBar: React.FC = () => {
         )}
       </div>
 
-      {/* Center Section - Voice Status */}
+      {/* Center Section - Context Monitor */}
       <div className="status-bar__section status-bar__section--center">
-        <button
-          className={`status-bar__mic-btn ${isMicActive ? 'status-bar__mic-btn--active' : ''}`}
-          onClick={toggleMic}
-          title={isMicActive ? 'Deactivate microphone' : 'Activate microphone'}
-          aria-label={isMicActive ? 'Deactivate microphone' : 'Activate microphone'}
-        >
-          <span className="status-bar__mic-icon">
-            {isProcessingVoice ? '🎤' : isMicActive ? '🎙️' : '🔇'}
-          </span>
-          <span className="status-bar__mic-text">
-            {isProcessingVoice
-              ? 'Processing...'
-              : isMicActive
-                ? 'Listening'
-                : 'Click to activate'}
-          </span>
-        </button>
+        <ContextMonitor />
       </div>
 
       {/* Right Section - System Info */}

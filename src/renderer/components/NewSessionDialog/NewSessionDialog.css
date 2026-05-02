@@ -1,0 +1,303 @@
+/**
+ * New Session Dialog Styles
+ */
+
+.new-session-dialog__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fade-in 0.2s ease-out;
+}
+
+.new-session-dialog {
+  background: var(--bg-primary);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slide-up 0.3s ease-out;
+}
+
+.new-session-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.new-session-dialog__title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.new-session-dialog__close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.new-session-dialog__close:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.new-session-dialog__close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.new-session-dialog__form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.new-session-dialog__error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  animation: shake 0.4s ease-in-out;
+}
+
+.new-session-dialog__error-icon {
+  font-size: 18px;
+}
+
+.new-session-dialog__error-text {
+  flex: 1;
+  font-size: 14px;
+  color: #ef4444;
+  font-weight: 500;
+}
+
+.new-session-dialog__field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-session-dialog__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.new-session-dialog__input,
+.new-session-dialog__select {
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.new-session-dialog__input:focus,
+.new-session-dialog__select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.new-session-dialog__input:disabled,
+.new-session-dialog__select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.new-session-dialog__hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.new-session-dialog__loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.new-session-dialog__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent-color);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.new-session-dialog__no-models {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.new-session-dialog__no-models-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.new-session-dialog__no-models-text {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.new-session-dialog__retry {
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-session-dialog__retry:hover {
+  background: var(--bg-secondary);
+  border-color: var(--accent-color);
+}
+
+.new-session-dialog__actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.new-session-dialog__button {
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.new-session-dialog__button--secondary {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.new-session-dialog__button--secondary:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-color);
+}
+
+.new-session-dialog__button--primary {
+  background: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  color: white;
+}
+
+.new-session-dialog__button--primary:hover:not(:disabled) {
+  background: var(--accent-color-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.new-session-dialog__button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .new-session-dialog {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .new-session-dialog__header,
+  .new-session-dialog__form {
+    padding: 16px;
+  }
+
+  .new-session-dialog__actions {
+    flex-direction: column;
+  }
+
+  .new-session-dialog__button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Made with Bob */
