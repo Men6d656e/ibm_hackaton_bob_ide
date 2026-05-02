@@ -37,8 +37,16 @@ const NAV_ITEMS: NavItem[] = [
  * @returns {JSX.Element} The sidebar component
  */
 export const Sidebar: React.FC = () => {
-  const { sidebarView, setSidebarView, isSidebarCollapsed, toggleSidebar, toggleTheme, theme } =
-    useAppStore();
+  const {
+    sidebarView,
+    setSidebarView,
+    isSidebarCollapsed,
+    toggleSidebar,
+    toggleTheme,
+    theme,
+    isMicActive,
+    toggleMic,
+  } = useAppStore();
 
   /**
    * Handle navigation item click
@@ -75,6 +83,21 @@ export const Sidebar: React.FC = () => {
 
       {/* Bottom Actions */}
       <div className="sidebar__footer">
+        {/* Microphone Toggle */}
+        <button
+          className={`sidebar__action ${isMicActive ? 'sidebar__action--active' : ''}`}
+          onClick={toggleMic}
+          title={isMicActive ? 'Disable microphone' : 'Enable microphone'}
+          aria-label={isMicActive ? 'Disable microphone' : 'Enable microphone'}
+        >
+          <span className="sidebar__action-icon">{isMicActive ? '🎤' : '🔇'}</span>
+          {!isSidebarCollapsed && (
+            <span className="sidebar__action-label">
+              {isMicActive ? 'Mic On' : 'Mic Off'}
+            </span>
+          )}
+        </button>
+
         {/* Theme Toggle */}
         <button
           className="sidebar__action"

@@ -9,6 +9,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { useAppStore } from '../../store/app.store';
+import { getAudioService } from '../../services/audio-service';
 import './AudioVisualizer.css';
 
 /**
@@ -19,12 +20,12 @@ import './AudioVisualizer.css';
 export const AudioVisualizer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
-  const audioContextRef = useRef<AudioContext>();
-  const analyserRef = useRef<AnalyserNode>();
+  const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array>();
   
   const { isMicActive, isProcessingVoice } = useAppStore();
   const [isInitialized, setIsInitialized] = useState(false);
+  const audioService = getAudioService();
 
   /**
    * Initialize audio context and analyser
@@ -40,28 +41,22 @@ export const AudioVisualizer: React.FC = () => {
   }, [isMicActive]);
 
   /**
-   * Initialize Web Audio API
+   * Initialize Web Audio API using audio service
    */
   const initializeAudio = async () => {
     try {
-      // Create audio context
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContext();
-
-      // Create analyser node
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
+      // Get analyser node from audio service
+      const analyser = audioService.getAnalyserNode();
       
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      dataArrayRef.current = new Uint8Array(bufferLength);
-
-      // Get microphone stream
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-
-      setIsInitialized(true);
-      startVisualization();
+      if (analyser) {
+        analyserRef.current = analyser;
+        const bufferLength = analyser.frequencyBinCount;
+        dataArrayRef.current = new Uint8Array(bufferLength);
+        setIsInitialized(true);
+        startVisualization();
+      } else {
+        console.warn('Audio service analyser not available yet');
+      }
     } catch (error) {
       console.error('Failed to initialize audio:', error);
     }
@@ -116,9 +111,7 @@ export const AudioVisualizer: React.FC = () => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
+    analyserRef.current = null;
     setIsInitialized(false);
   };
 

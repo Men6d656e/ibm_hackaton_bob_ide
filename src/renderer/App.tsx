@@ -10,20 +10,45 @@
 import React, { useEffect } from 'react';
 import { Layout } from './components/Layout/Layout';
 import { useAppStore } from './store/app.store';
+import { useVoiceRecognition } from './hooks/useVoiceRecognition';
 import './styles/global.css';
 
 /**
  * Main application component
- * 
+ *
  * @returns {JSX.Element} The root application component
  */
 export const App: React.FC = () => {
-  const { initialize, isInitialized } = useAppStore();
+  const { initialize, isInitialized, setError } = useAppStore();
+
+  // Initialize voice recognition
+  const {
+    isSupported: isVoiceSupported,
+    error: voiceError,
+  } = useVoiceRecognition({
+    wakeWord: 'ollama',
+    autoStart: true,
+    enableAudioFeedback: true,
+  });
 
   useEffect(() => {
     // Initialize application state
     initialize();
   }, [initialize]);
+
+  // Handle voice recognition errors
+  useEffect(() => {
+    if (voiceError) {
+      setError(voiceError.message);
+    }
+  }, [voiceError, setError]);
+
+  // Show warning if voice recognition is not supported
+  useEffect(() => {
+    if (!isVoiceSupported) {
+      console.warn('Web Speech API is not supported in this browser');
+    }
+  }, [isVoiceSupported]);
 
   if (!isInitialized) {
     return (
